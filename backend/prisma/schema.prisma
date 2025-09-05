@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Subscription details
+  name          String
+  description   String?
+  isActive      Boolean  @default(true)
+  
+  // Payment details
+  tokenSymbol   String   // USDC, ETH, etc.
+  tokenAddress  String   // Contract address
+  amount        String   // Amount in token units
+  receiverAddress String // Destination address
+  
+  // Chain details
+  fromChain     String   // base, ethereum, arbitrum
+  toChain       String   // target chain
+  
+  // Schedule
+  frequency     String   // daily, weekly, monthly
+  nextRunDate   DateTime
+  lastRunDate   DateTime?
+  
+  // Execution history
+  executions    Execution[]
+  
+  @@map("subscriptions")
+}
+
+model Execution {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  
+  subscriptionId  String
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  // Execution details
+  status          String   // pending, success, failed, retrying
+  txHash          String?
+  gasUsedUSD      String?
+  outputAmount    String?
+  
+  // Route used
+  routeSteps      String   // JSON string of route steps
+  fallbackUsed    Boolean  @default(false)
+  
+  // Error details
+  errorMessage    String?
+  retryCount      Int      @default(0)
+  
+  @@map("executions")
+}
+
+model RouteCache {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
+  
+  // Route key (hash of from/to/token/amount)
+  routeKey      String   @unique
+  
+  // Cached route data
+  routeData     String   // JSON string
+  
+  @@map("route_cache")
+}

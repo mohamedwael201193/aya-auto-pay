@@ -1,0 +1,301 @@
+{
+  "name": "aya-autopay",
+  "version": "1.0.0",
+  "description": "AI-powered subscription and payment automation tools for Aya Wallet",
+  "author": "Aya Team",
+  "license": "MIT",
+  "server": {
+    "url": "http://localhost:3001/mcp",
+    "description": "Aya AutoPay MCP Server",
+    "capabilities": {
+      "tools": true,
+      "resources": false,
+      "prompts": true
+    }
+  },
+  "tools": [
+    {
+      "name": "subscription.create",
+      "description": "Create a new recurring subscription for automated payments across chains. Perfect for setting up regular DeFi investments, bill payments, or savings transfers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the subscription (e.g., 'Monthly DeFi Investment', 'Weekly Savings')"
+          },
+          "tokenSymbol": {
+            "type": "string",
+            "description": "Token symbol to send (USDC, ETH, USDT, WBTC, etc.)"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Amount to send each period (e.g., '100' for 100 USDC)"
+          },
+          "receiverAddress": {
+            "type": "string",
+            "description": "Destination wallet address (0x...)"
+          },
+          "fromChain": {
+            "type": "string",
+            "description": "Source blockchain (ethereum, base, arbitrum, polygon, optimism)"
+          },
+          "toChain": {
+            "type": "string",
+            "description": "Target blockchain (ethereum, base, arbitrum, polygon, optimism)"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["daily", "weekly", "monthly"],
+            "description": "How often to execute the payment"
+          }
+        },
+        "required": ["name", "tokenSymbol", "amount", "receiverAddress", "fromChain", "toChain", "frequency"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "text": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "subscription.list",
+      "description": "List all subscriptions with their status, next payment dates, and execution history. Shows active and paused subscriptions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "text": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "subscription.cancel",
+      "description": "Cancel an existing subscription by ID. The subscription will be paused and no further payments will be processed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Subscription ID to cancel (get this from subscription.list)"
+          }
+        },
+        "required": ["id"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "text": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "route.quote",
+      "description": "Get the optimal route for cross-chain payments with gas estimates, slippage info, and fallback options. AI finds the best path across DEXs and bridges.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fromChain": {
+            "type": "string",
+            "description": "Source blockchain (ethereum, base, arbitrum, polygon, optimism)"
+          },
+          "toChain": {
+            "type": "string",
+            "description": "Target blockchain (ethereum, base, arbitrum, polygon, optimism)"
+          },
+          "tokenIn": {
+            "type": "string",
+            "description": "Input token symbol (USDC, ETH, USDT, etc.)"
+          },
+          "tokenOut": {
+            "type": "string",
+            "description": "Output token symbol (usually same as tokenIn for transfers)"
+          },
+          "amountIn": {
+            "type": "string",
+            "description": "Amount to send (e.g., '100' for 100 USDC)"
+          },
+          "receiverAddress": {
+            "type": "string",
+            "description": "Destination wallet address"
+          }
+        },
+        "required": ["fromChain", "toChain", "tokenIn", "tokenOut", "amountIn", "receiverAddress"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "text": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "gas.ensure",
+      "description": "Check gas balance and provide top-up recommendations. Ensures sufficient gas for transaction execution with safety buffer.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "description": "Blockchain to check gas on (ethereum, base, arbitrum, polygon, optimism)"
+          },
+          "userAddress": {
+            "type": "string",
+            "description": "User's wallet address to check balance"
+          },
+          "estimatedGasUSD": {
+            "type": "string",
+            "description": "Estimated gas cost in USD (e.g., '0.15')"
+          }
+        },
+        "required": ["chain", "userAddress", "estimatedGasUSD"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "text": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "risk.scan",
+      "description": "Scan transactions for security risks before execution. Checks for suspicious addresses, high-value transactions, and other risk factors.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tokenAddress": {
+            "type": "string",
+            "description": "Token contract address to analyze"
+          },
+          "receiverAddress": {
+            "type": "string",
+            "description": "Destination address to check for risks"
+          },
+          "chain": {
+            "type": "string",
+            "description": "Blockchain network (ethereum, base, arbitrum, polygon, optimism)"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Transaction amount to assess risk level"
+          }
+        },
+        "required": ["tokenAddress", "receiverAddress", "chain", "amount"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "text": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "create_monthly_subscription",
+      "description": "Create a monthly subscription payment",
+      "arguments": [
+        {
+          "name": "amount",
+          "description": "Amount to send monthly",
+          "required": true
+        },
+        {
+          "name": "token",
+          "description": "Token to send (USDC, ETH, etc.)",
+          "required": true
+        },
+        {
+          "name": "receiver",
+          "description": "Destination address",
+          "required": true
+        },
+        {
+          "name": "chain",
+          "description": "Target blockchain",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "description": "Create a monthly USDC subscription",
+      "prompt": "Pay 100 USDC monthly to 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b9 on Arbitrum"
+    },
+    {
+      "description": "List active subscriptions",
+      "prompt": "Show me all my active subscriptions"
+    },
+    {
+      "description": "Get cross-chain route",
+      "prompt": "What's the best route to send 50 USDC from Base to Polygon?"
+    },
+    {
+      "description": "Check gas balance",
+      "prompt": "Do I have enough gas on Ethereum for a $0.20 transaction?"
+    },
+    {
+      "description": "Security scan",
+      "prompt": "Scan this transaction for risks before I approve it"
+    }
+  ]
+}
